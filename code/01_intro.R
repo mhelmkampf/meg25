@@ -1,8 +1,31 @@
-### =========================================================================###
+### ======================================================================== ###
 ### Exercises in Marine Ecological Genetics 2025                             ###
 ### 01. Introduction: R basics                                               ###
-### =========================================================================###
+### ======================================================================== ###
 
+### =============================<<< bash >>>===================================
+
+# Establish ssh connection to cluster
+ssh -X user1234@rosa.hpc.uni-oldenburg.de
+
+# Clone git repository
+git clone https://github.com/mhelmkampf/meg25.git
+
+# Load modules
+module load R/4.3.1-foss-2023a
+module load RStudio-Server/2023.09.1+494-foss-2023a
+
+# Start RStudio
+rstudio-start-on-rosa.sh
+
+# Execute in new terminal window
+ssh -N -L 8000: ...
+
+#> Open http://localhost:8000 in browser
+
+
+### ===============================<<< R >>>====================================
+### >>> R <<<
 
 ### Simple math
 3 + 5 / 2
