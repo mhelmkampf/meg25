@@ -1,6 +1,3 @@
-*** This repository is under construction, please check back on Friday ***
-
-
 ## Overview
 
 This repository contains data and code for ***Exercises in Marine Ecological Genetics*** at the University of Oldenburg, summer semester 2025
