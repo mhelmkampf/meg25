@@ -8,30 +8,23 @@
 
 
 ### Establish ssh connection to cluster
-ssh -X user1234@rosa.hpc.uni-oldenburg.de
+ssh user1234@rosa.hpc.uni-oldenburg.de
 
 
-### Download git repository
+### Download git repository with course materials
 git clone https://github.com/mhelmkampf/meg25.git
 
 
-### Create results directory
-mkdir results
-
-
-### Load modules (software)
-module load R/4.3.1-foss-2023a
+### Load RStudio module
 module load RStudio-Server/2023.09.1+494-foss-2023a
 
 
-### Start RStudio
+### Exectute script to start RStudio
 rstudio-start-on-rosa.sh
 
 
-### Execute in new terminal window
-ssh -N -L 8000: ...
-
-
+### Follow instructions on screen in new terminal window
+#> ssh -N -L 8000: ...
 #> Open http://localhost:8000 in browser
 
 
