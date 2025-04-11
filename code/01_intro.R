@@ -16,7 +16,7 @@ git clone https://github.com/mhelmkampf/meg25.git
 
 
 ### Load RStudio module
-module load RStudio-Server/2023.09.1+494-foss-2023a
+module load RStudio-Server
 
 
 ### Exectute script to start RStudio
@@ -33,7 +33,7 @@ rstudio-start-on-rosa.sh
 
 
 ### ============================================================================
-### Exercise 1: Manual calculation
+### Exercise 1: Manual test for HWE
 
 ### What are the allele frequencies?
 
