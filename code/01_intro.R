@@ -3,78 +3,123 @@
 ### 01. Introduction: R basics                                               ###
 ### ======================================================================== ###
 
+
 ### =============================<<< bash >>>===================================
 
-# Establish ssh connection to cluster
+
+### Establish ssh connection to cluster
 ssh -X user1234@rosa.hpc.uni-oldenburg.de
 
-# Clone git repository
+
+### Download git repository
 git clone https://github.com/mhelmkampf/meg25.git
 
-# Load modules
+
+### Create results directory
+mkdir results
+
+
+### Load modules (software)
 module load R/4.3.1-foss-2023a
 module load RStudio-Server/2023.09.1+494-foss-2023a
 
-# Start RStudio
+
+### Start RStudio
 rstudio-start-on-rosa.sh
 
-# Execute in new terminal window
+
+### Execute in new terminal window
 ssh -N -L 8000: ...
+
 
 #> Open http://localhost:8000 in browser
 
 
+
 ### ===============================<<< R >>>====================================
-### >>> R <<<
-
-### Simple math
-3 + 5 / 2
-(3 + 5) / 2
 
 
-### Assigning values to variables
-a <- 2   # assign value "2" to variable "a"
-a        # recall value
-a + 5
+### ============================================================================
+### Exercise 1: Manual calculation
 
-b <- a + 5
+### What are the allele frequencies?
 
-c <- "hello"
-a + c
+### What are the expected genotype frequencies?
 
-
-### Example data frame (i.e. table)
-iris
+### Is the population in Hardy-Weinberg equilibrium?
 
 
-### Basic R syntax: function(object, parameters)
-head(iris)
-help(head)   # Getting help with a function
-head(iris, n = 5)
+### ----------------------------------------------------------------------------
+### Genotype-phenotype relationship: yy = yellow, yb = green, bb = blue phenotype
 
 
-### Access specific data in a data frame (here, a column)
-iris$Sepal.Width
+### Allele frequencies
+n <- 10                        # number of individuals
+y <- ((6 * 2) + 1) / (n * 2)   # yellow allele frequency
+b <- ((3 * 2) + 1) / (n * 2)   # blue allele frequency
 
 
-# Optional exercise: calculate maximum, mean and standard deviation of sepal width
-# Hint: search for solutions online (e.g. stackoverflow.com/questions) or
-# in other/R_cheatsheet_Short.pdf
+### Expected genotype frequencies
+yy_e <- y ^ 2
+yb_e <- 2 * y * b
+bb_e <- b ^ 2
 
 
-### Simple plotting example 1: histogram
-hist(iris$Sepal.Width)
+### Enter data into data frame for test
+dat <- data.frame(row.names = c("yy", "yb", "bb"),
+                  "observed" = c(6, 1, 3),
+                  "expected" = c(yy_e, yb_e, bb_e)
+)
 
 
-### Simple plotting example 2: scatter plot
-plot(x = iris$Sepal.Length,
-     y = iris$Petal.Length)
+### Perform Pearson's chi-squared test of goodness of fit
+help(chisq.test)
 
-reg <- lm(formula = Petal.Length ~ Sepal.Length,
-          data = iris)   # fit linear model to data
+test <- chisq.test(dat$observed, p = dat$expected)
+test
+pchisq(test$statistic, df = 1, lower.tail = FALSE)   # recalculate p with 1 degree of freedom
 
-abline(reg, col = "red") # add linear model (regression line) to plot
+# Note: The Chi-square test is not actually recommended for such low sample sizes, 
+# we use it here because it is appropriate for most real world data
 
+
+### Heterozygosity
+Ho <- 1 / n
+He <- 2 * y * b
+
+
+### Fixation index
+Fis = (He - Ho) / He
+
+
+### ============================================================================
+### Exercise 2: Using Genepop
+
+### Set working directory to "meg25" (use Files tab in bottom right panel)
+getwd()    # check working directory
+
+
+### Install and load required R packages
+install.packages("adegenet")
+install.packages("pegas")
+library(adegenet)
+library(pegas)
+
+
+### Read in data from Genepop format file
+help(read.genepop)
+yellowblue <- read.genepop("meg25/data/msats/yellowblue.gen", ncode = 1)
+
+
+### Access data in the new genind object
+yellowblue
+yellowblue@tab
+yellowblue@loc.n.all
+yellowblue@all.names
+
+
+### Test for HWE
+hw.test(yellowblue)
 
 
 ### ============================================================================
