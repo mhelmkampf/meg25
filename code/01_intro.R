@@ -35,6 +35,7 @@ rstudio-start-on-rosa.sh
 ### ============================================================================
 ### Exercise 1: Manual test for HWE
 
+
 ### What are the allele frequencies?
 
 ### What are the expected genotype frequencies?
@@ -84,35 +85,6 @@ He <- 2 * y * b
 ### Fixation index
 Fis = (He - Ho) / He
 
-
-### ============================================================================
-### Exercise 2: Using Genepop
-
-### Set working directory to "meg25" (use Files tab in bottom right panel)
-getwd()    # check working directory
-
-
-### Install and load required R packages
-install.packages("adegenet")
-install.packages("pegas")
-library(adegenet)
-library(pegas)
-
-
-### Read in data from Genepop format file
-help(read.genepop)
-yellowblue <- read.genepop("meg25/data/msats/yellowblue.gen", ncode = 1)
-
-
-### Access data in the new genind object
-yellowblue
-yellowblue@tab
-yellowblue@loc.n.all
-yellowblue@all.names
-
-
-### Test for HWE
-hw.test(yellowblue)
 
 
 ### ============================================================================
