@@ -111,53 +111,15 @@ test_HW("../data/msats/puella_medialuna.gen", outputFile = "../../work/HW_medial
 # Use data file: ../data/msats/puella_caribbean.gen
 
 
-### Hamlets are simultaneous hermaphrodites with external fertilization. 
-### Given the observed heterozygosities above, is self-fertilization likely to occur regularly?
-
-
 
 ### ============================================================================
-### Exercise 3: Ne and fluctuating population size
+### Exercise 3 (optional): Self-fertilization and heterozygote deficit
 
-### Simulate a population experiencing a severe bottleneck
-N <- c(100, 120, 80, 110, 10)
-N
-Na <- mean(N)                 # arithmetic mean
-Na                            # explicitly: Na <- (100 + 120 + 80 + 110 + 10) / 5
+### Hamlets are simultaneous hermaphrodites with external fertilization,
+### raising the question whether self-fertilization occurs regularly
 
-
-### Calculate the harmonic mean = effective population size
-Ne <- 
-  
-  
-### Add 45 generations with population size = 100 after the bottle neck
-help(rep)   # alternatively, search for "rep" in Help tab in bottom right panel
-N <- c(100, 120, 80, 110, 10, )
-
-
-### Plot Ne over time using for loop
-Ne <- 0   # initialize variable
-
-for (i in 1:length(N)) {
-  Ne[i] <- 1 / mean(1 / N[1:i])
-}
-
-df <- data.frame(Generation = 1:length(Ne), Ne)
-df
-
-plot(x = df$Generation, y = df$Ne)
-
-
-### Optional: fancier plotting with ggplot
-install.packages("tidyverse")
-library(tidyverse)
-
-ggplot(data = df, aes(x = Generation, y = Ne)) + 
-  geom_point() + geom_line() +
-  theme_classic(base_size = 16)
-
-
-### How is the effective populations size affected by the bottleneck?
+### Test for heterozygote deficiency
+test_HW("../data/msats/puella_caribbean.gen", which = "global deficit", outputFile = "../../work/Hdef_caribbean.txt")
 
 
 
@@ -170,23 +132,9 @@ barbados@all.names   # Names of alleles for each locus
 
 
 ### Is this population in HWE?
-hw.test(barbados)
+hw.test(barbados)   # Quick test
 
 
 ### Load and test all Caribbean populations
 caribbean <- read.genepop("../data/msats/puella_caribbean.gen", ncode = 3)
 test_HW("../data/msats/puella_caribbean.gen", outputFile = "../../work/HW_caribbean.txt")
-hw.test(caribbean)
-
-
-
-## ============================================================================
-### Exercise 3 solutions
-
-### Calculate the harmonic mean = effective population size
-Ne <- 1 / mean(1 / N)   # explicitly: Ne <- 1 / ((1/100 + 1/120 + 1/80 + 1/110 + 1/10) / 5)
-Ne                            
-
-
-### Add 45 generations with population size = 100 after the bottleneck above
-N <- c(100, 120, 80, 110, 10, rep(100, 45))
