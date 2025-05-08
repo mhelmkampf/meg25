@@ -29,12 +29,13 @@ git pull
 
 ### Reorganize work directory
 cd ~/work
+ls -l
 
 mkdir msats
 mv *.* msats
 
-mkdir asm
-cd asm
+
+### Make new directory called "asm" and navigate there
 
 
 ### Create link to hamlet genome assemblies
@@ -51,18 +52,135 @@ head HypPue1_assembly_hybrid.fas
 
 
 ### Look at a slice of underlying read data
+cp ~/meg25/data/asm/*.fastq.gz .
+gzip -d *.fastq.gz
 
+cat HypPue1_illumina_raw_F.fastq
+
+head -n 4 HypPue1_illumina_raw_F.fastq
+head -n 4 HypPue2_pacbio_hifi.fastq
+
+
+### How do the underlying Illumina and PacBio reads differ?
+
+
+### How could we count the number of sequences?
+# grep -c '<pattern>' HypPue1_illumina_raw_F.fastq
+
+
+### ============================================================================
+### Exercise 2: Assess read quality and trim Illumina reads
+
+module load FastQC
+module load cutadapt
+
+mkdir fastqc
+
+
+### Run FastQC, a quality control tool for high-throughput sequence reads
+### https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+fastqc -o fastqc HypPue1_illumina_raw_F.fastq HypPue1_illumina_raw_R.fastq
+fastqc -o fastqc HypPue2_pacbio_hifi.fastq
+
+
+### Open a new terminal window on your local computer and download the HTML results
+scp user1234@rosa.hpc.uni-oldenburg.de:/user/user1234/work/fastq/*.html .
+
+
+### Open HTML results with browser
+
+
+### Alternatively, print results as text only
+# lynx -dump fastqc/HypPue1_illumina_raw_F_fastqc.html
+
+
+### Back on the cluster, remove adapters and low quality bases from Illumina reads
+cutadapt -h
+
+cutadapt \
+  -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+  -q 20 \
+  -m 120 \
+  -o HypPue1_illumina_trimmed_F.fastq \
+  HypPue1_illumina_raw_F.fastq
+
+
+### Re-run FastQC on trimmed reads and compare before and after
 
 
 
 ### ============================================================================
-### Exercise 2: Assess read quality before and after trimming
+### Exercise 3: Calculate and compare assembly metrics
+
+### Install assembly_stats package for Python
+pip install assembly_stats
+
+assembly_stats HypPue1_assembly_hybrid.fas
+assembly_stats HypPue2_assembly_pacbio.fas
+
+
+### How do the two assemblies differ?
+
+
+### ============================================================================
+### Exercise 4: Assemble genome using hifiasm
+
+mkdir hifiasm
+
+module load hifiasm
+
+hifiasm -h
+
+
+### Create link to subset of PacBio HiFi reads (30000 reads, about 1 GB)
+ln -s /fs/dss/home/haex1482/share/HypPue2_pacbio_30k.fastq.gz HypPue2_pacbio_30k.fastq.gz
+
+
+### Assemble with hifiasm, a fast and accurate assembler for Hifi reads
+hifiasm -o hifiasm/test30k --primary -t 10 HypPue2_pacbio_30k.fastq.gz
+
+
+### Convert assembly graph to fasta format and calculate metrics
+cd hifiasm
+
+awk '/^S/{print ">"$2; print $3}' test30k.p_ctg.gfa > test30k.p_ctg.fas
+
+assembly_stats test30k.p_ctg.fas
 
 
 
 ### ============================================================================
-### Solutions
+### Optional: Search for microsatellites
 
+### Find and print AG repeats with at least 10 units and the surrounding 250 bp
+### (three matches)
+grep -Eo --color=always '.{0,250}(AG){10,}.{0,250}' HypPue1_assembly_hybrid.fas | head -n 3
+
+
+
+### ============================================================================
+### Solutions: Exercise 1
+
+### New directory
+mkdir asm
+cd asm
+
+### Print first line only
 head -n 1 HypPue1_assembly_hybrid.fas
 
+### Illumina and PacBio reads differ in read length and quality profile
 
+### Counting reads in Fastq file
+grep -c '^+$' HypPue1_illumina_raw_F.fastq
+grep -c '^+$' HypPue2_pacbio_hifi.fastq
+
+
+
+### ----------------------------------------------------------------------------
+### Solutions: Exercise 2
+
+### Re-run FastQC on trimmed reads
+fastqc -o fastqc HypPue1_illumina_trimmed_F.fastq
+
+
+### Display results
