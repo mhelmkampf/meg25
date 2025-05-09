@@ -68,7 +68,7 @@ head -n 4 HypPue2_pacbio_hifi.fastq
 
 
 ### How could we count the number of sequences?
-### Hint: grep -c '<pattern>' HypPue1_illumina_raw_F.fastq
+### Use: grep -c '<pattern>' HypPue1_illumina_raw_F.fastq
 #>
 
 
