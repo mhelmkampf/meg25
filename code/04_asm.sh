@@ -50,7 +50,7 @@ head HypPue1_assembly_hybrid.fas
 
 
 ### Print only first line (header of first sequence)
-man head
+### Review usage of "head" with: man head
 #>
 
 
@@ -68,7 +68,8 @@ head -n 4 HypPue2_pacbio_hifi.fastq
 
 
 ### How could we count the number of sequences?
-#> grep -c '<pattern>' HypPue1_illumina_raw_F.fastq
+### Hint: grep -c '<pattern>' HypPue1_illumina_raw_F.fastq
+#>
 
 
 
