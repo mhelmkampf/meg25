@@ -36,6 +36,7 @@ mv *.* msats
 
 
 ### Make new directory called "asm" and navigate there
+#>
 
 
 ### Create link to hamlet genome assemblies
@@ -49,6 +50,8 @@ head HypPue1_assembly_hybrid.fas
 
 
 ### Print only first line (header of first sequence)
+man head
+#>
 
 
 ### Look at a slice of underlying read data
@@ -65,7 +68,8 @@ head -n 4 HypPue2_pacbio_hifi.fastq
 
 
 ### How could we count the number of sequences?
-# grep -c '<pattern>' HypPue1_illumina_raw_F.fastq
+#> grep -c '<pattern>' HypPue1_illumina_raw_F.fastq
+
 
 
 ### ============================================================================
@@ -106,6 +110,7 @@ cutadapt \
 
 
 ### Re-run FastQC on trimmed reads and compare before and after
+#>
 
 
 
@@ -120,6 +125,7 @@ assembly_stats HypPue2_assembly_pacbio.fas
 
 
 ### How do the two assemblies differ?
+
 
 
 ### ============================================================================
@@ -137,7 +143,11 @@ ln -s /fs/dss/home/haex1482/share/HypPue2_pacbio_30k.fastq.gz HypPue2_pacbio_30k
 
 
 ### Assemble with hifiasm, a fast and accurate assembler for Hifi reads
-hifiasm -o hifiasm/test30k --primary -t 10 HypPue2_pacbio_30k.fastq.gz
+hifiasm \
+  -o hifiasm/test30k \
+  --primary \
+  -t 10 \
+  HypPue2_pacbio_30k.fastq.gz
 
 
 ### Convert assembly graph to fasta format and calculate metrics
@@ -145,16 +155,17 @@ cd hifiasm
 
 awk '/^S/{print ">"$2; print $3}' test30k.p_ctg.gfa > test30k.p_ctg.fas
 
-assembly_stats test30k.p_ctg.fas
+#>
 
 
 
 ### ============================================================================
 ### Optional: Search for microsatellites
 
-### Find and print AG repeats with at least 10 units and the surrounding 250 bp
-### (three matches)
-grep -Eo --color=always '.{0,250}(AG){10,}.{0,250}' HypPue1_assembly_hybrid.fas | head -n 3
+cd ~/work/asm
+
+### Highlight AC and GT repeats with at least 10 units in the first 100000 bp
+head -n 2 HypPue1_assembly_hybrid.fas | cut -c -100000 | grep -E '(AC|GT){10,}'
 
 
 
@@ -165,10 +176,10 @@ grep -Eo --color=always '.{0,250}(AG){10,}.{0,250}' HypPue1_assembly_hybrid.fas 
 mkdir asm
 cd asm
 
+
 ### Print first line only
 head -n 1 HypPue1_assembly_hybrid.fas
 
-### Illumina and PacBio reads differ in read length and quality profile
 
 ### Counting reads in Fastq file
 grep -c '^+$' HypPue1_illumina_raw_F.fastq
@@ -183,4 +194,9 @@ grep -c '^+$' HypPue2_pacbio_hifi.fastq
 fastqc -o fastqc HypPue1_illumina_trimmed_F.fastq
 
 
-### Display results
+
+### ----------------------------------------------------------------------------
+### Solutions: Exercise 4
+
+### Calculate assembly metrics
+assembly_stats test30k.p_ctg.fas
