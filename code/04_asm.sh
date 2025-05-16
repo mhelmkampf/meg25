@@ -74,7 +74,7 @@ head -n 4 HypPue2_pacbio_hifi.fastq
 
 
 ### ============================================================================
-### Exercise 2: Assess read quality and trim Illumina reads
+### Exercise 2: Assess read quality and trim Illumina reads (*** skipped ***)
 
 module load FastQC
 module load cutadapt
