@@ -213,38 +213,6 @@ for file in R2_before_thinning.tsv R2_after_thinning.tsv; do
 done
 
 
-### Plot in ASCII
-for file in R2_before_thinning.tsv R2_after_thinning.tsv; do
-  echo
-  echo "==> $file <=="
-  awk '
-  BEGIN { bin_size=0.05 }
-  /^CHR/ { next }  # skip header
-  {
-    if ($5 != "-nan") {
-      r2 = $5 + 0
-      bin = int(r2 / bin_size)
-      counts[bin]++
-      total++
-    }
-  }
-  END {
-    max_percent = 0
-    for (i in counts) {
-      percent = 100 * counts[i] / total
-      if (percent > max_percent) max_percent = percent
-    }
-    for (i = 0; i <= int(1 / bin_size); i++) {
-      percent = 100 * counts[i] / total
-      bar_len = int((percent / max_percent) * 50)
-      bin_label = sprintf("%.2f", i * bin_size)
-      printf "%5s | %s (%.1f%%)\n", bin_label, substr("##################################################", 1, bar_len), percent
-    }
-  }' "$file"
-  echo
-done
-
-
 ### Subset phyps2 dataset to create example file
 vcftools \
     --gzvcf phyps2e_snpsfilt.vcf.gz \
