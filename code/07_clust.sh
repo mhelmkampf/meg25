@@ -30,7 +30,7 @@ cd ~/work/clust
 
 
 ### ============================================================================
-### Exercise 1: Summarize and filter VCF files
+### Exercise 1: Estimate and plot ancestry proportions (ADMIXTURE)
 
 module load VCFtools
 module load PLINK
@@ -65,275 +65,294 @@ plink --vcf hamlets_LG12_2m2k.vcf \
     --out bed/hamlets_LG12_2m2k
 
 
-# Run ADMIXTURE
+### Run ADMIXTURE
 for k in {2..8}
 do
     admixture \
     --cv -j10 \
-    bed/hamlets_LG12_2m2k.bed $k > k${k}_hamlets_LG12_2m2k.out
+    bed/hamlets_LG12_2m2k.bed $k > hamlets_LG12_2m2k_k${k}.out
 done
 
 
-# mv *.P admcv
-# mv *.Q admcv
-
-
-# Print CV error
+### Print CV error
 for k in {2..8}
 do
-    grep 'CV' k${k}_hamlets_LG12_2m2k.out \
+    grep 'CV' hamlets_LG12_2m2k_k${k} \
     >> CV_k2-8.out
 done
 
 
-# Add sample ids to proportions
-for k in {1..12}
+### Add sample ids to ancestry proportions
+for k in {2..8}
 do
-    paste -d " " $base/0_metadata/ids_phyps2e.txt admcv/phyps2e_m2n1l5.${k}.Q |
+    paste -d " " ../../meg25/data/meta/hamlet_subset.txt hamlets_LG12_2m2k.${k}.Q |
         sed 's/ $//g' \
-        > AdmcvProp_phyps2e_m2n1l5_k${k}.tsv
+        > AncProp_k${k}_hamlets.tsv
 done
 
-# Plotted with R/admcv_phyps2.R
+
+### To plot the ancestry proportions, we will now switch to R
+
+
+### Load RStudio module
+module load RStudio-Server
+
+
+### Exectute script to start RStudio
+rstudio-start-on-rosa.sh
+
+
+### Open NEW terminal window and run:
+# ssh -N -L 8000: ... (full command see instructions in first terminal window)
+# Enter password
+
+
+### Open http://localhost:8000 in web browser
+
 
 
 ### ===============================<<< R >>>====================================
 
-### Read in TSV file and add population information
-het <- read_tsv("Het_hamlets_mac2.tsv") %>%
-  mutate(Species = str_sub(INDV, -6, -4),
-         Location = str_sub(INDV, -3, -1),
-         Population = str_sub(INDV, -6, -1))
+### Load packages
+library(tidyverse)
 
 
-### Summarize and visualize with boxplot
-h <- ggplot() +
-    geom_boxplot()
+### Set and check working directory
+setwd("~/work/clust")
+getwd()
 
 
-### Summarize and visualize with boxplot
-(h <- ggplot(het, aes(x = Population, y = F, fill = Species)) +
-    geom_boxplot(color = "grey20",
-                 alpha = 0.75,
-                 lwd = 0.3) +
-    scale_fill_manual(values = c("goldenrod2", "royalblue3", "grey20", "coral2", "grey80")) +
-    labs(title = NULL,
-         x = "Population",
-         y = "Mean genome-wide Fis") +
-    theme_minimal(base_size = 12) +
-    theme(panel.grid.minor = element_blank(),
-          panel.grid.major.x = element_blank(),
-          axis.title.y = element_text(vjust = 2),
-          axis.text.x = element_text(angle = 35)
+### Read in data for k = 2
+admix2 <- read_delim("AncProp_k2_hamlets.tsv", delim = " ", col_names = "Sample")
+
+
+### Pivot to long format and reformat sample name
+long2 <- admix2 %>%
+  pivot_longer(cols = starts_with("X"), names_to = "Ancestry", values_to = "Proportion") %>%
+  mutate(Name = paste0(str_sub(Sample, -6), "_", str_sub(Sample, 1, 5)))
+
+
+### Basic plot
+p2 <- ggplot(long2, aes(x = Name, y = Proportion, fill = Ancestry)) +
+    geom_bar(position = "fill", stat = "identity")
+
+
+### Make plot prettier
+p2 + scale_fill_manual(values = c("mediumseagreen", "coral")) +
+  labs(x = NULL, y = NULL, tag = "k = 2") +
+  theme_minimal() +
+  theme(
+    text = element_text(color = "grey20"),
+    panel.grid = element_blank(),
+    axis.text.x = element_text(size = 10, color = "gray20", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "gray20"),
+    plot.tag = element_text(angle = -90),
+    plot.tag.position = c(1.02, 0.6),
+    legend.position = "none",
+    plot.margin = unit(c(1, 10, 1, 1), "mm")
     )
+
+
+### Read in and plot ancestry proportions for k = 3 and 6
+### Note: you will have to specify additional colors in scale_fill_manual,
+### pick one from https://sape.inf.usi.ch/quick-reference/ggplot2/colour
+#>
+
+
+
+### ============================================================================
+### Exercise 2: PCA based on SNP profile
+
+### Install / load packages
+install.packages("vcfR")
+
+library(vcfR)
+library(adegenet)
+
+
+### Read VCF file into R
+vcf <- read.vcfR("hamlets_LG12_2m2k.vcf")
+vcf
+
+
+### Convert from vcfR to genlight object
+data <- vcfR2genlight(vcf)
+
+
+### Principal Component Analysis (PCA)
+pca <- glPca(data, nf = 2)
+pca
+pca$scores   # view Principal Components (n = 2)
+
+
+### Convert to tibble, add species and location information
+scores <- as.data.frame(pca$scores) %>%
+  rownames_to_column("Sample") %>%
+  as_tibble() %>%
+  mutate(Species = str_sub(Sample, -6, -4))
+
+
+### Basic plot
+pc <- ggplot(data = scores, aes(x = PC1, y = PC2, color = Species)) +
+  geom_point(size = 5, alpha = 0.75)
+
+
+### Plot PCA
+(pc + scale_color_manual(values = c("mediumseagreen", "orange", "royalblue",
+                                    "gray30", "coral", "gray70")) +
+  theme_light() +
+  theme(
+    text = element_text(color = "gray20"),
+    panel.grid = element_blank(),
+    axis.title.x = element_text(vjust = -1.5)
+  )
 )
 
-pi 
+
+### Optional: Plot eigenvalues (proportion of variance explained by each PC)
+pca$eig
+
+var <- pca$eig / sum(pca$eig)
+
+barplot(var, main = "Proportion of variance explained", las = 2)
 
 
-
-
-
-
-### Create link to today's SNP dataset
-ln -s /fs/dss/home/haex1482/share/hamlets_LG12_snp.vcf.gz hamlets_LG12_snp.vcf.gz
-
-
-### How many sites (SNPs) does the example dataset have?
-
-
-### VCFtools is a standard software to filter and run calculations on genetic
-### variation data in VCF format: https://vcftools.github.io/man_latest.html
-
-
-### Use the following code block to filter and write data to a new file
-### (insert filtering parameters in lieu of ...)
-
-vcftools \
-    --gzvcf hamlets_LG12_snp.vcf.gz \
-    ... \
-    --recode \
-    --stdout | bgzip > ...
-
-
-### Referring to the manual linked above, include only sites with a "Minor Allele 
-### Count" (mac) of at least 2
-
-
-### Re-calculate the number of sites to confirm filtering was sucessful, and
-### spot check visually that there are indeed at least 2 counts of each allele
+### Optional: zoom into main cluster
+(pc + scale_color_manual(values = c("mediumseagreen", "orange", "royalblue", "gray30", "coral", "gray70")) +
+  theme_light() +
+  theme(
+    text = element_text(color = "gray20"),
+    panel.grid = element_blank(),
+    axis.title.x = element_text(vjust = -1.5)
+  ) +
+  coord_cartesian(xlim = c(-8, -4), ylim = c(-4, 4))   # zoom in
+)
 
 
 
 ### ============================================================================
-### Exercise 2: Filter by linkage disequilibrium
+### Addon 1: Plot inbreeding coefficient from session 6
 
-### Referring to the linkage decay plot, how many basepairs (bp) apart should the 
-### sites be from each other to avoid linkage disequilibrium? Use vcftools --thin
-### to create such a dataset
-
-
-### Calculate the correlation coefficient of linkage disequilibrium in the first
-### 100000 bp of both datasets (before and after thinning)
-vcftools --gzvcf hamlets_LG12_snp.vcf.gz \
-  --hap-r2 \
-  --stdout > R2_before_thinning.tsv
-
-vcftools --gzvcf hamlets_LG12_snp_2kb.vcf.gz \
-  --hap-r2 \
-  --stdout > R2_after_thinning.tsv
+### Read in heterozygosity estimates
+het <- read_tsv("../gdiv/Het_hamlets_snp.tsv")
 
 
-### Plot R2 distribution before and after thinning, in ASCII
-for file in R2_before_thinning.tsv R2_after_thinning.tsv; do
-  echo
-  echo "==> $file <=="
-  awk '
-  BEGIN { bin_size=0.05 }
-  /^CHR/ { next }  # skip header
-  {
-    if ($5 != "-nan") {
-      r2 = $5 + 0
-      bin = int(r2 / bin_size)
-      counts[bin]++
-      total++
-    }
-  }
-  END {
-    max_percent = 0
-    for (i in counts) {
-      percent = 100 * counts[i] / total
-      if (percent > max_percent) max_percent = percent
-    }
-    for (i = 0; i <= int(1 / bin_size); i++) {
-      percent = 100 * counts[i] / total
-      bar_len = int((percent / max_percent) * 50)
-      bin_label = sprintf("%.2f", i * bin_size)
-      printf "%5s | %s (%.1f%%)\n", bin_label, substr("##################################################", 1, bar_len), percent
-    }
-  }' "$file"
-  echo
-done
+### Add column with species name
+hetsp <- het %>%
+  mutate(Species = str_sub(INDV, -6, -4)
+  )
+
+### Caculate mean chromosome-wide inbreeding coefficient Fis per species
+species_fis <- hetsp %>%
+  group_by(Species) %>%
+  summarise(mean_F = mean(F, na.rm = TRUE)) %>%
+  arrange(desc(mean_F))
+
+
+### Plot Fis
+ggplot(species_fis, aes(x = Species, y = mean_F, fill = Species)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("mediumseagreen", "orange", "royalblue", "gray30", "coral", "gray70")) +
+  labs(title = NULL, x = NULL, y = "Mean F") +
+  theme_minimal() +
+  theme(
+    text = element_text(color = "grey20", size = 14),
+    panel.grid.major.x = element_blank(),
+    legend.position = "none"
+  )
 
 
 
 ### ============================================================================
-### Exercise 3: Assess genetic diversity (heterozygosity and nucleotide diversity)
+### Addon 2: Plot nucleotide diversity per species
 
-### Calculate heterozygosity and Fis for each individual
-vcftools \
-  --gzvcf hamlets_LG12_snp_mac2.vcf.gz \
-  --het \
-  --stdout > Het_hamlets_snp.tsv
+### Read in per-site pi estimates
 
+species_pi <- tibble(
+  Species = c(
+    "atlahua",
+    "gummigutta",
+    "indigo",
+    "nigricans",
+    "puella",
+    "unibel"
+  ),
+  mean_pi = c(
+    0.00799963,
+    0.00573394,
+    0.00554391,
+    0.00550682,
+    0.00594079,
+    0.00600401
+  )
+)
 
-### From here, we could average Fis per population and plot in R
-
-
-### To calculate nucleotide diversity, we need all sites, not just SNPs:
-ln -s /fs/dss/home/haex1482/share/hamlets_LG12-1M_all.vcf.gz hamlets_LG12-1M_all.vcf.gz
-
-
-### Copy population id files to working directory
-cp ../../meg25/data/gdiv/*.txt .
-
-
-### Measure nucleotide divergence per species / population
-for i in pop_*.txt; do
-vcftools \
-  --gzvcf hamlets_LG12-1M_all.vcf.gz \
-  --keep "$i" \
-  --site-pi \
-  --stdout > Pi_"$i".tsv
-done
-
-
-### Average pi per population
-for i in Pi_*.tsv; do
-  echo $i
-  awk '$3 != "-nan" { sum += $3 ; next } END { print sum / NR }' $i
-  echo
-done
+ggplot(species_pi, aes(x = Species, y = mean_pi, fill = Species)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("mediumseagreen", "orange", "royalblue", "gray30", "coral", "gray70")) +
+  labs(title = NULL, x = NULL, y = "Mean Pi") +
+  theme_minimal() +
+  theme(
+    text = element_text(color = "grey20", size = 14),
+    panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"
+  )
 
 
 
 ### ============================================================================
 ### Solutions:
 
-### VCF stats
-bcftools stats hamlets_LG12_snp.vcf.gz | grep 'SN'
-#> 1032804 sites
-
-zcat hamlets_LG12_snp.vcf.gz | grep -c -v '#'
+### Read in data for k = 3 and 6
+admix3 <- read_delim("AncProp_k3_hamlets.tsv", delim = " ", col_names = "Sample")
+admix6 <- read_delim("AncProp_k6_hamlets.tsv", delim = " ", col_names = "Sample")
 
 
-### Include only sites with minor allele count of at least 2
-vcftools \
-    --gzvcf hamlets_LG12_snp.vcf.gz \
-    --mac 2 \
-    --recode \
-    --stdout | bgzip > hamlets_LG12_snp_mac2.vcf.gz
+### Pivot to long format
+long3 <- admix3 %>%
+  pivot_longer(cols = starts_with("X"), names_to = "Ancestry", values_to = "Proportion") %>%
+    mutate(Name = paste0(str_sub(Sample, -6), "_", str_sub(Sample, 1, 5)))
+
+long6 <- admix6 %>%
+  pivot_longer(cols = starts_with("X"), names_to = "Ancestry", values_to = "Proportion") %>%
+  mutate(Name = paste0(str_sub(Sample, -6), "_", str_sub(Sample, 1, 5)))
 
 
-### Summarize
-bcftools stats hamlets_LG12_snp_mac2.vcf.gz | grep 'SN'
-#> 319960 sites
+### Basic plot
+p3 <- ggplot(long3, aes(x = Name, y = Proportion, fill = Ancestry)) +
+    geom_bar(position = "fill", stat = "identity")
+
+p6 <- ggplot(long6, aes(x = Name, y = Proportion, fill = Ancestry)) +
+    geom_bar(position = "fill", stat = "identity")
 
 
-### Spot check
-zcat hamlets_LG12_snp_mac2.vcf.gz | tail
+### Make plot prettier
+p3 + scale_fill_manual(values = c("mediumseagreen", "coral", "royalblue")) +
+  labs(x = NULL, y = NULL, tag = "k = 3") +
+  theme_minimal() +
+  theme(
+    text = element_text(color = "grey20"),
+    panel.grid = element_blank(),
+    axis.text.x = element_text(size = 10, color = "gray20", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "gray20"),
+    plot.tag = element_text(angle = -90),
+    plot.tag.position = c(1.02, 0.6),
+    legend.position = "none",
+    plot.margin = unit(c(1, 10, 1, 1), "mm")
+    )
 
-
-### Thin the filtered data so that no two sites are within 2000 bp from each other
-vcftools \
-    --gzvcf hamlets_LG12_snp.vcf.gz \
-    --thin 2000 \
-    --recode \
-    --stdout | bgzip > hamlets_LG12_snp_2kb.vcf.gz
-
-
-
-### ============================================================================
-### Alternative code and notes
-
-### Summarize in ASCII
-for file in R2_before_thinning.tsv R2_after_thinning.tsv; do
-  echo
-  echo "$file:"
-  awk '$5 != "-nan" { sum += $5; n++; vals[n] = $5 }
-  END {
-    if (n == 0) exit
-    asort(vals)
-    median = (n % 2) ? vals[int((n+1)/2)] : (vals[n/2] + vals[n/2 + 1]) / 2
-    print "  Mean R²: " sum/n
-    print "  Median R²: " median
-    print "  Count: " n
-  }' "$file"
-done
-
-
-### Subset phyps2 dataset to create example file
-vcftools \
-    --gzvcf phyps2e_snpsfilt.vcf.gz \
-    --chr LG12 \
-    --keep hamlet_subset.txt \
-    --recode \
-    --stdout | \
-    grep -v -e 'ID=Contig' -e '##GATKCommandLine=' | \
-    bgzip > hamlets_LG12_snp.vcf.gz
-
-vcftools \
-    --gzvcf ~/off/phylo2/2_genotyping/out/8_geno/phyps2_all.vcf.gz \
-    --chr LG12 \
-    --from-bp 1 \
-    --to-bp 1000000 \
-    --keep hamlet_subset.txt \
-    --recode \
-    --stdout | \
-    grep -v -e 'ID=Contig' -e '##GATKCommandLine=' | \
-    bgzip > hamlets_LG12-1M_all.vcf.gz
-
-
-zcat hamlets_LG12-1M_all.vcf.gz | /
-grep -v -e 'ID=Contig' -e '##GATKCommandLine=' /
-> hamlets_LG12-1M_all2.vcf.gz
+p6 + scale_fill_manual(values = c("orange", "gray30", "royalblue",
+                                  "violet", "coral", "mediumseagreen", "brown")) +
+  labs(x = NULL, y = NULL, tag = "k = 6") +
+  theme_minimal() +
+  theme(
+    text = element_text(color = "grey20"),
+    panel.grid = element_blank(),
+    axis.text.x = element_text(size = 10, color = "gray20", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "gray20"),
+    plot.tag = element_text(angle = -90),
+    plot.tag.position = c(1.02, 0.6),
+    legend.position = "none",
+    plot.margin = unit(c(1, 10, 1, 1), "mm")
+    )
