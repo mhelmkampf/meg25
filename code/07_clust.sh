@@ -1,6 +1,6 @@
 ### ======================================================================== ###
 ### Exercises in Marine Ecological Genetics 2025                             ###
-### 07. Population structure / clustering                                    ###
+### 07. Genetic clustering (population structure II)                         ###
 ### ======================================================================== ###
 
 
@@ -56,7 +56,7 @@ gzip -cd hamlets_LG12_2m2k.vcf.gz |
     > hamlets_LG12_2m2k.vcf
 
 
-### Convert to BED format
+### Convert to binary BED format
 mkdir bed
 
 plink --vcf hamlets_LG12_2m2k.vcf \
@@ -65,7 +65,7 @@ plink --vcf hamlets_LG12_2m2k.vcf \
     --out bed/hamlets_LG12_2m2k
 
 
-### Run ADMIXTURE
+### Run ADMIXTURE with cross-validation
 for k in {2..8}
 do
     admixture \
@@ -74,7 +74,7 @@ do
 done
 
 
-### Print CV error
+### Print CV error to find best k (lowest error)
 for k in {2..8}
 do
     grep 'CV' hamlets_LG12_2m2k_k${k} \
@@ -253,7 +253,7 @@ species_fis <- hetsp %>%
 ggplot(species_fis, aes(x = Species, y = mean_F, fill = Species)) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = c("mediumseagreen", "orange", "royalblue", "gray30", "coral", "gray70")) +
-  labs(title = NULL, x = NULL, y = "Mean F") +
+  labs(title = NULL, x = NULL, y = "Mean Fis") +
   theme_minimal() +
   theme(
     text = element_text(color = "grey20", size = 14),
