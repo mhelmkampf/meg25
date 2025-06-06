@@ -50,7 +50,8 @@ vcftools \
     --stdout | bgzip > hamlets_LG12_2m2k.vcf.gz
 
 
-### Decompress and remove "LG" from contig names
+### Decompress and remove "LG" from contig names 
+### (plink below only accepts human chromosome names)
 gzip -cd hamlets_LG12_2m2k.vcf.gz |
     sed 's/LG//g' \
     > hamlets_LG12_2m2k.vcf
@@ -61,7 +62,6 @@ mkdir bed
 
 plink --vcf hamlets_LG12_2m2k.vcf \
     --make-bed \
-    --allow-extra-chr \
     --out bed/hamlets_LG12_2m2k
 
 
@@ -77,9 +77,12 @@ done
 ### Print CV error to find best k (lowest error)
 for k in {2..8}
 do
-    grep 'CV' hamlets_LG12_2m2k_k${k} \
+    grep 'CV' hamlets_LG12_2m2k_k${k}.out \
     >> CV_k2-8.out
 done
+
+### What is the best k (i.e., that best explains the data)?
+#>
 
 
 ### Add sample ids to ancestry proportions
@@ -133,15 +136,15 @@ long2 <- admix2 %>%
 
 
 ### Basic plot
-p2 <- ggplot(long2, aes(x = Name, y = Proportion, fill = Ancestry)) +
-    geom_bar(position = "fill", stat = "identity")
+p2 <- ggplot(long2, aes(x = Name, y = Proportion, fill = Ancestry)) +   # mandatory: data and variables
+    geom_bar(position = "fill", stat = "identity")                      # mandatory: visual representation (geom) 
 
 
 ### Make plot prettier
-p2 + scale_fill_manual(values = c("mediumseagreen", "coral")) +
-  labs(x = NULL, y = NULL, tag = "k = 2") +
-  theme_minimal() +
-  theme(
+p2 + scale_fill_manual(values = c("mediumseagreen", "coral")) +         # set colors
+  labs(x = NULL, y = NULL, tag = "k = 2") +                             # labels
+  theme_minimal() +                                                     # basic style package
+  theme(                                                                # specific changes to style (fonts, grid lines etc.)
     text = element_text(color = "grey20"),
     panel.grid = element_blank(),
     axis.text.x = element_text(size = 10, color = "gray20", angle = 45, hjust = 1),
@@ -153,7 +156,7 @@ p2 + scale_fill_manual(values = c("mediumseagreen", "coral")) +
     )
 
 
-### Read in and plot ancestry proportions for k = 3 and 6
+### Read in and plot ancestry proportions for k = 4 and 6
 ### Note: you will have to specify additional colors in scale_fill_manual,
 ### pick one from https://sape.inf.usi.ch/quick-reference/ggplot2/colour
 #>
@@ -172,7 +175,6 @@ library(adegenet)
 
 ### Read VCF file into R
 vcf <- read.vcfR("hamlets_LG12_2m2k.vcf")
-vcf
 
 
 ### Convert from vcfR to genlight object
@@ -180,12 +182,14 @@ data <- vcfR2genlight(vcf)
 
 
 ### Principal Component Analysis (PCA)
-pca <- glPca(data, nf = 2)
-pca
-pca$scores   # view Principal Components (n = 2)
+pca <- glPca(data, nf = 2)   # 2 principal components
 
 
-### Convert to tibble, add species and location information
+### Print principal components to screen
+#>
+
+
+### Convert to tibble, add species information
 scores <- as.data.frame(pca$scores) %>%
   rownames_to_column("Sample") %>%
   as_tibble() %>%
@@ -193,19 +197,33 @@ scores <- as.data.frame(pca$scores) %>%
 
 
 ### Basic plot
-pc <- ggplot(data = scores, aes(x = PC1, y = PC2, color = Species)) +
+p <- ggplot(data = scores, aes(x = PC1, y = PC2, color = Species)) +
   geom_point(size = 5, alpha = 0.75)
 
 
-### Plot PCA
-(pc + scale_color_manual(values = c("mediumseagreen", "orange", "royalblue",
-                                    "gray30", "coral", "gray70")) +
+### Make plot prettier
+q <- p + scale_color_manual(values = c("mediumseagreen", "orange", "royalblue",
+                                   "gray30", "coral", "gray70")) +
   theme_light() +
   theme(
     text = element_text(color = "gray20"),
     panel.grid = element_blank(),
     axis.title.x = element_text(vjust = -1.5)
   )
+
+
+### Optional: Add labels of interesting samples
+labels <- c("54761atlliz", "18267unibel")
+
+(q + geom_text(aes(label = ifelse(Sample %in% labels, Sample, "")),
+            size = 3, color = "gray20", vjust = -1)
+)
+
+
+### Optional: Zoom into main cluster
+(q + geom_text(aes(label = ifelse(Sample %in% labels, Sample, "")),
+            size = 3, color = "gray20", vjust = -1) +
+  coord_cartesian(xlim = c(-7, -5), ylim = c(-3, 3))   # zoom into these coordinates
 )
 
 
@@ -217,21 +235,9 @@ var <- pca$eig / sum(pca$eig)
 barplot(var, main = "Proportion of variance explained", las = 2)
 
 
-### Optional: zoom into main cluster
-(pc + scale_color_manual(values = c("mediumseagreen", "orange", "royalblue", "gray30", "coral", "gray70")) +
-  theme_light() +
-  theme(
-    text = element_text(color = "gray20"),
-    panel.grid = element_blank(),
-    axis.title.x = element_text(vjust = -1.5)
-  ) +
-  coord_cartesian(xlim = c(-8, -4), ylim = c(-4, 4))   # zoom in
-)
-
-
 
 ### ============================================================================
-### Addon 1: Plot inbreeding coefficient from session 6
+### Addendum 1: Plot inbreeding coefficient from session 6
 
 ### Read in heterozygosity estimates
 het <- read_tsv("../gdiv/Het_hamlets_snp.tsv")
@@ -239,8 +245,8 @@ het <- read_tsv("../gdiv/Het_hamlets_snp.tsv")
 
 ### Add column with species name
 hetsp <- het %>%
-  mutate(Species = str_sub(INDV, -6, -4)
-  )
+  mutate(Species = str_sub(INDV, -6, -4))
+
 
 ### Caculate mean chromosome-wide inbreeding coefficient Fis per species
 species_fis <- hetsp %>%
@@ -264,10 +270,9 @@ ggplot(species_fis, aes(x = Species, y = mean_F, fill = Species)) +
 
 
 ### ============================================================================
-### Addon 2: Plot nucleotide diversity per species
+### Addendum 2: Plot nucleotide diversity per species
 
-### Read in per-site pi estimates
-
+### Create tibble (data frame) with values (calculated via awk in bash)
 species_pi <- tibble(
   Species = c(
     "atlahua",
@@ -287,6 +292,8 @@ species_pi <- tibble(
   )
 )
 
+
+### Plot Pi
 ggplot(species_pi, aes(x = Species, y = mean_pi, fill = Species)) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = c("mediumseagreen", "orange", "royalblue", "gray30", "coral", "gray70")) +
@@ -304,13 +311,17 @@ ggplot(species_pi, aes(x = Species, y = mean_pi, fill = Species)) +
 ### ============================================================================
 ### Solutions:
 
-### Read in data for k = 3 and 6
-admix3 <- read_delim("AncProp_k3_hamlets.tsv", delim = " ", col_names = "Sample")
+### What is the best k?
+cat CV_k2-8.out # CV error (K=2): 0.43992
+
+
+### Read in data for k = 4 and 6
+admix4 <- read_delim("AncProp_k4_hamlets.tsv", delim = " ", col_names = "Sample")
 admix6 <- read_delim("AncProp_k6_hamlets.tsv", delim = " ", col_names = "Sample")
 
 
 ### Pivot to long format
-long3 <- admix3 %>%
+long4 <- admix4 %>%
   pivot_longer(cols = starts_with("X"), names_to = "Ancestry", values_to = "Proportion") %>%
     mutate(Name = paste0(str_sub(Sample, -6), "_", str_sub(Sample, 1, 5)))
 
@@ -320,7 +331,7 @@ long6 <- admix6 %>%
 
 
 ### Basic plot
-p3 <- ggplot(long3, aes(x = Name, y = Proportion, fill = Ancestry)) +
+p4 <- ggplot(long4, aes(x = Name, y = Proportion, fill = Ancestry)) +
     geom_bar(position = "fill", stat = "identity")
 
 p6 <- ggplot(long6, aes(x = Name, y = Proportion, fill = Ancestry)) +
@@ -328,8 +339,8 @@ p6 <- ggplot(long6, aes(x = Name, y = Proportion, fill = Ancestry)) +
 
 
 ### Make plot prettier
-p3 + scale_fill_manual(values = c("mediumseagreen", "coral", "royalblue")) +
-  labs(x = NULL, y = NULL, tag = "k = 3") +
+p4 + scale_fill_manual(values = c("royalblue", "mediumseagreen", "orange", "coral")) +
+  labs(x = NULL, y = NULL, tag = "k = 4") +
   theme_minimal() +
   theme(
     text = element_text(color = "grey20"),
@@ -356,3 +367,7 @@ p6 + scale_fill_manual(values = c("orange", "gray30", "royalblue",
     legend.position = "none",
     plot.margin = unit(c(1, 10, 1, 1), "mm")
     )
+
+
+### Print principal components to screen
+pca$scores
