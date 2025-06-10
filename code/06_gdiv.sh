@@ -211,30 +211,3 @@ for file in R2_before_thinning.tsv R2_after_thinning.tsv; do
     print "  Count: " n
   }' "$file"
 done
-
-
-### Subset phyps2 dataset to create example file
-vcftools \
-    --gzvcf phyps2e_snpsfilt.vcf.gz \
-    --chr LG12 \
-    --keep hamlet_subset.txt \
-    --recode \
-    --stdout | \
-    grep -v -e 'ID=Contig' -e '##GATKCommandLine=' | \
-    bgzip > hamlets_LG12_snp.vcf.gz
-
-vcftools \
-    --gzvcf ~/off/phylo2/2_genotyping/out/8_geno/phyps2_all.vcf.gz \
-    --chr LG12 \
-    --from-bp 1 \
-    --to-bp 1000000 \
-    --keep hamlet_subset.txt \
-    --recode \
-    --stdout | \
-    grep -v -e 'ID=Contig' -e '##GATKCommandLine=' | \
-    bgzip > hamlets_LG12-1M_all.vcf.gz
-
-
-zcat hamlets_LG12-1M_all.vcf.gz | /
-grep -v -e 'ID=Contig' -e '##GATKCommandLine=' /
-> hamlets_LG12-1M_all2.vcf.gz
