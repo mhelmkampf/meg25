@@ -4,8 +4,7 @@
 ### ======================================================================== ###
 
 
-### =============================<<< bash >>>===================================
-
+### <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< bash >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ### Establish ssh connection to cluster
 ssh user1234@rosa.hpc.uni-oldenburg.de
@@ -41,9 +40,6 @@ rstudio-start-on-rosa.sh
 
 ### Select "Terminal" to execute bash code from within RStudio
 
-
-
-### =============================<<< bash >>>===================================
 
 ### Create and navigate to today's working directory
 mkdir ~/work/sel
@@ -81,7 +77,7 @@ vcftools \
 
 
 
-### ===============================<<< R >>>====================================
+### <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< R >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ### Load packages
 library(tidyverse)
@@ -208,6 +204,8 @@ print(out %>% filter(OUTLIER == "yes"), n = nrow(out))
 ### Exercise 2: Identify candidate genes under selection
 
 
+### <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< bash >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 ### Create link to the genome annotation file in GFF format
 ln -s /fs/dss/home/haex1482/share/HypPue1_annotation.gff HypPue1_annotation.gff
 
@@ -239,7 +237,7 @@ zcat pue_LG12_phased.vcf.gz | head
 #> Phased genotypes use "|" instead of "/"
 
 
-### ===============================<<< R >>>====================================
+### <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< R >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ### Install / Load packages
 install.packages("rehh")
