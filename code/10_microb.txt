@@ -1,0 +1,81 @@
+### ======================================================================== ###
+### Exercises in Marine Ecological Genetics 2025                             ###
+### 10. Metabarcoding: microbiome analysis                                   ###
+### ======================================================================== ###
+
+
+### General notes
+
+# Data used in this session were produced with QIIME 2 by Sabrin Abdelghany,
+# and are unpublished
+
+# Data files can be found at https://github.com/mhelmkampf/meg25 in data/microb (*.qzv)
+
+# To view files, download them to your local computer, and drag and drop into 
+# QIIME 2's web interface at https://view.qiime2.org
+
+
+
+### ============================================================================
+### Exercise 1: Data preprocessing
+
+### 10_demux.qzv: read count and quality summary after demultiplexing
+
+# Is the number of reads per sample sufficient? Are there outliers?
+
+# How long are the reads? What does the quality distribution tell you?
+
+
+
+### ============================================================================
+### Exercise 2: Denoising (Amplicon Sequence Variant inference)
+
+### 21_ASV_table.qzv (frequencies)
+
+# How would you describe the frequency distribution of features (= ASVs)? How many rare /
+# very abundant ASVs are there?
+
+# Are there ASVs found in many or all samples (see Feature Detail)? 
+
+# Note the feature ID (first column) of an ASV you find interesting
+
+
+### 22_ASV_sequences.qzv
+
+# Retrieve the sequence of your ASV of interest using its feature ID
+
+
+
+### ============================================================================
+### Exercise 3: Taxonomic assignment and community composition
+
+# Use BLAST (blastn) to identify your ASV: https://blast.ncbi.nlm.nih.gov/Blast.cgi.
+# What organism does it represent?
+
+
+### 31_community_comp.qzv: microbial community composition bar plot (mitochondria and chloroplasts removed)
+
+# Set taxonomic level to 2, sort by sample type, and increase bar width. What patterns
+# do you observe?
+
+
+
+### ============================================================================
+### Exercise 4: Diversity analyses
+
+### 41_alpha_rarefaction.qzv: Shannon index relative to depth
+
+# Which sample type is the most diverse in terms of Shannon's index (41_alpha_rarefaction.qzv)?
+
+
+### 42_beta_bray-curtis_pcoa.qzv: Principal Coordinate Analysis of pairwise Bray-Curtis distances
+
+# What samples / sample types are similar / dissimilar to each other?
+
+
+
+### ----------------------------------------------------------------------------
+
+# Discuss these two research questions in light of the results: do sea cucumbers
+# - feed selectively?
+# - change the microbial community composition of the sediment?

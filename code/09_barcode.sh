@@ -58,13 +58,15 @@ cp ~/meg25/data/barcode/seq_10R.ab1 .   # adjust file name here and below
 
 
 ### Extract sequence from trace files
-module load EMBOSS/6.6.0-foss-2023a
+module load EMBOSS
 
 seqret -sequence seq_10F.ab1 -outseq seq_10F.fas
 seqret -sequence seq_10R.ab1 -outseq seq_10R.fas
 
 
 ### Trim sequences (adjust limits according to your case)
+module load SeqKit
+
 seqkit subseq -r 65:580 seq_10F.fas > trim_10F.fas
 seqkit subseq -r 50:470 seq_10R.fas > trim_10R.fas
 
