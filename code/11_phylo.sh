@@ -41,7 +41,7 @@ cd ~/work/phylo
 
 
 ### ============================================================================
-### Exercise 2: Infer distance-based phylogenetic tree
+### Exercise 2: Infer distance-based phylogenetic tree (Neighbor Joining)
 
 ### Copy fasta files to working directory
 cp ~/meg25/data/phylo/*.fas .
@@ -57,14 +57,28 @@ cat Rhyncho_coi_databases.fas Rhyncho_coi_samples.fas > Rhyncho_coi_combined.fas
 
 ### Align sequences using MAFFT (server version)
 ### https://mafft.cbrc.jp/alignment/server/
-
 # - Copy and paste combined Fasta file into input box
 # - Select Output order: Same as input, Strategy: Auto and submit
+# - Examine the alignment visually – are there any ambiguous or misaligned positions?
+
+
+### Conduct Neighbor Joining analysis
+# - From alignment, click on "Phylogenetic tree" button
+# - Select: Method = NJ, Conserved sites
+# -         Model = Jukes-Cantor
+# -         Bootstrap = On (Number of resampling = 200)
+# - Go!
+
+
+### Visualize tree
+# - Click on "View tree on Archaeopteryx.js" button
+# - Adjust label font sizes and branch width to improve visualization
+# - Reorder branches / tip for improved clarity: Tools | O
 
 
 
 ### ============================================================================
-### Exercise 3: Infer phylogenetic tree using maximum likelihood
+### Exercise 3: Infer phylogenetic tree using Maximum Likelihood
 
 ### Align sequences using MAFFT
 module load MAFFT
@@ -72,7 +86,7 @@ module load MAFFT
 mafft Rhyncho_coi_combined.fas > Rhyncho_coi_combined.aln
 
 
-### Perform maximum likelihood + bootstrap analysis with RAxML-NG
+### Perform Maximum Likelihood + bootstrap analysis with RAxML-NG
 ### (https://github.com/amkozlov/raxml-ng/wiki)
 module load IQ-TREE
 
@@ -95,9 +109,14 @@ raxml-ng \
 ### https://itol.embl.de
 
 # - Upload | copy and paste tree in Newick format into "Tree text" box
-# - Root tree: click on Rhina ancylostoma branch / tip | Tree structure | Re-root the tree here
-# - Increase branch width: Branch option | Line style
+# - Zoom in and increase branch width to improve visibility: Branch option | Line style
+# - Root tree: click on Rhina ancylostoma branch or tip: Tree structure | Re-root the tree here
 # - Display support values: Advanced | Bootstrap / metadata > Display | Symbol or Text (range 50-100)
 
 
-### How do the distance and maximum likelihood tree differ?
+### How do the Neighbor-Joining (left) and Maximum Likelihood tree (right) differ?
+### How are they the same?
+
+
+### Are samples assigned to different species than their morphological identification
+### based on the molecular phylogenies?
