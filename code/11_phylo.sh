@@ -1,6 +1,6 @@
 ### ======================================================================== ###
 ### Exercises in Marine Ecological Genetics 2025                             ###
-### 09. Phylogenetic inference                                               ###
+### 11. Phylogenetic inference                                               ###
 ### ======================================================================== ###
 
 
@@ -88,7 +88,7 @@ mafft Rhyncho_coi_combined.fas > Rhyncho_coi_combined.aln
 
 ### Perform Maximum Likelihood + bootstrap analysis with RAxML-NG
 ### (https://github.com/amkozlov/raxml-ng/wiki)
-module load IQ-TREE
+module load RAxML-NG
 
 raxml-ng \
     --all \
